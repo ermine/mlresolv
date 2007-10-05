@@ -1,0 +1,20 @@
+.PHONY: testlib clean
+
+open ../../../config
+
+TESTS[] =
+   test
+
+OCAMLINCLUDES += .. $(LIBDIR)
+
+#OCAMLFLAGS += -rectypes
+
+foreach(name, $(TESTS))
+   OCAML_OTHER_LIBS = mlresolv
+   OCamlProgram($(name), $(name))
+   $(name): $(addsuffix .ml, $(name))
+
+testlib: $(TESTS)
+
+clean:
+   $(CLEAN) $(TESTS)

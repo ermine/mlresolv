@@ -1,6 +1,6 @@
 .PHONY: makelib testlib install clean
 
-#.SUBDIRS: tests
+.SUBDIRS: tests
 
 FILES = mlresolv
 LIB = mlresolv
@@ -10,7 +10,7 @@ section
    mlresolv_stub$(EXT_OBJ):
 
 section
-   CCLIB = $(StaticCLibrary libmresolv_stub, mlresolv_stub)
+   CCLIB = $(StaticCLibrary libmlresolv_stub, mlresolv_stub)
    OCAML_LIB_FLAGS += -cclib -lmlresolv_stub
    OCAMLLIBS = $(OCamlLibrary $(LIB), $(FILES))
    $(OCAMLLIBS): $(CCLIB)
