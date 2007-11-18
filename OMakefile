@@ -9,8 +9,10 @@ section
    INCLUDES += $(shell $(OCAMLC) -where)
    mlresolv_stub$(EXT_OBJ):
 
+CLIBNAME = libmlresolv_stub
+
 section
-   CCLIB = $(StaticCLibrary libmlresolv_stub, mlresolv_stub)
+   CCLIB = $(StaticCLibrary $(CLIBNAME), mlresolv_stub)
    OCAML_LIB_FLAGS += -cclib -lmlresolv_stub
    OCAMLLIBS = $(OCamlLibrary $(LIB), $(FILES))
    $(OCAMLLIBS): $(CCLIB)
@@ -18,9 +20,12 @@ section
 
 open ../../config
 
-IFILES =
+IFILES[] =
+   mlresolv
 
-LibInstall(makelib, $(LIB), $(IFILES))
+ALIBS = $(CLIBNAME)$(EXT_LIB)
+
+LibInstall(makelib, $(LIB), $(IFILES), $(ALIBS))
 
 install: makelib
 
