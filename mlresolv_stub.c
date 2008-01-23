@@ -2,12 +2,16 @@
 #include <caml/memory.h>
 #include <caml/alloc.h>
 #include <caml/custom.h>
+#include <caml/fail.h>
 
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
+#include <netdb.h>
+#include <errno.h>
 #include <string.h>
+
 
 #ifdef DEBUG
 #include <stdarg.h>
@@ -109,7 +113,52 @@ static value c_to_mlvariant(variant *vtable, int val)
   return caml_hash_variant(vtable[1].name);
 }
 
-CAMLprim value camlresolv_query(value vdname, value vclass, value vtype)
+static value *mlresolv_error_exn = NULL;
+static value *mlresolv_host_not_found_exn = NULL;
+static value *mlresolv_try_again_exn = NULL;
+static value *mlresolv_no_recovery_exn = NULL;
+static value *mlresolv_no_data_exn = NULL;
+
+CAMLprim value mlresolv_init(value unit) {
+  mlresolv_error_exn = caml_named_value("Mlresolv_error");
+  if (mlresolv_error_exn == NULL)
+    invalid_argument("Exception Mlresolv_Error not initialized");
+
+  mlresolv_no_recovery_exn = caml_named_value("Mlresolv_no_recovery");
+  if (mlresolv_no_recovery_exn == NULL)
+    invalid_argument("Exception Mlresolv_NoRecovery not initialized");
+
+  mlresolv_host_not_found_exn = caml_named_value("Mlresolv_host_not_found");
+  if (mlresolv_host_not_found_exn == NULL)
+    invalid_argument("Exception Mlresolv_HostNotFound not initialized");
+
+  mlresolv_try_again_exn = caml_named_value("Mlresolv_try_again");
+  if (mlresolv_try_again_exn == NULL)
+    invalid_argument("Exception Mlresolv_TryAgain not initialized");
+
+  mlresolv_no_data_exn = caml_named_value("Mlresolv_no_data");
+  if (mlresolv_no_data_exn == NULL)
+    invalid_argument("Exception Mlresolv_NoData not initialized");
+
+  return Val_unit;
+}
+
+static void mlresolv_error(int errcode) {
+  value res;
+  value err;
+
+  err = alloc_small(1, 0);
+  Field(err, 0) = Val_int(errcode);
+
+  Begin_roots1(err);
+    res = alloc_small(2, 0);
+    Field(res, 0) = *mlresolv_error_exn;
+    Field(res, 1) = err;
+  End_roots();
+  mlraise(res);
+}
+
+CAMLprim value mlresolv_query(value vdname, value vclass, value vtype)
 {
   union {
     HEADER hdr;              /* defined in resolv.h */
@@ -145,8 +194,23 @@ CAMLprim value camlresolv_query(value vdname, value vclass, value vtype)
 		   mlvariant_to_c(rr_type, vtype),
 		   (u_char*)&response, sizeof(response));
 
-  if(rc < 0)
-    failwith("res_query error");  /* h_errno */
+  if (rc < 0) {
+    switch (h_errno) {
+    case NETDB_INTERNAL:  
+      mlresolv_error(errno);
+    case HOST_NOT_FOUND:  /* Authoritative Answer Host not found */
+      raise_constant(*mlresolv_host_not_found_exn);
+    case TRY_AGAIN:       /* Non-Authoritative Host not found, or SERVERFAIL */
+      raise_constant(*mlresolv_try_again_exn);
+    case NO_RECOVERY:
+      raise_constant(*mlresolv_no_recovery_exn);
+    case NO_DATA:         /* Valid name, no data record of requested type */
+      raise_constant(*mlresolv_no_data_exn);
+    case NETDB_SUCCESS:   /* no problem */
+    defaykt:
+      failwith("res_query: unknown error");
+    }
+  }
 
   cp = (u_char *)&response.buf + sizeof(HEADER);
   eom = (u_char *)&response.buf + rc;

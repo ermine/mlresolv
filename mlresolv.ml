@@ -1,5 +1,5 @@
 (*
- * (c) 2006-2007 Anastasia Gornostaeva, <ermine@ermine.pp.ru>
+ * (c) 2006-2008 Anastasia Gornostaeva, <ermine@ermine.pp.ru>
  *
  * RFC 1035 - Domain names - implementation and specification
  * RFC 2782 - A DNS RR for specifying the location of services (DNS SRV)
@@ -102,6 +102,22 @@ type rdata = [
 | `NAPTR        (* Naming Authority PoinTeR *)
 | `OPT          (* OPT pseudo-RR, RFC2761 *)
 ]
+
+exception Error of int
+exception NoRecovery
+exception HostNotFound
+exception NoData
+exception TryAgain
+
+external init: unit -> unit = "mlresolv_init"
+
+let _ =
+   Callback.register_exception "Mlresolv_error" (Error 0);
+   Callback.register_exception "Mlresolv_no_recovery" NoRecovery;
+   Callback.register_exception "Mlresolv_host_not_found" HostNotFound;
+   Callback.register_exception "Mlresolv_try_again" TryAgain;
+   Callback.register_exception "Mlresolv_no_data" NoData;
+   init ()
 	
 type rr = {
    rr_name: string;
@@ -112,4 +128,4 @@ type rr = {
 }
 
 external query: string -> rr_class -> rr_type -> rr list
-   = "camlresolv_query"
+   = "mlresolv_query"

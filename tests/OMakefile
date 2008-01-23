@@ -4,6 +4,7 @@ open ../../../config
 
 TESTS[] =
    test
+   resolver
 
 OCAMLINCLUDES += .. $(LIBDIR)
 
@@ -11,6 +12,7 @@ OCAMLINCLUDES += .. $(LIBDIR)
 
 foreach(name, $(TESTS))
    OCAML_OTHER_LIBS = mlresolv
+   OCAML_LINK_FLAGS = -linkall
    OCamlProgram($(name), $(name))
    $(name): $(addsuffix .ml, $(name))
 
