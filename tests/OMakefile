@@ -1,7 +1,5 @@
 .PHONY: testlib clean
 
-open ../../../config
-
 TESTS[] =
    test
    resolver
@@ -11,7 +9,8 @@ OCAMLINCLUDES += .. $(LIBDIR)
 #OCAMLFLAGS += -rectypes
 
 foreach(name, $(TESTS))
-   OCAML_OTHER_LIBS = mlresolv
+   OCAML_OTHER_LIBS =
+   OCAML_LIBS = ../mlresolv
    OCAML_LINK_FLAGS = -linkall
    OCamlProgram($(name), $(name))
    $(name): $(addsuffix .ml, $(name))

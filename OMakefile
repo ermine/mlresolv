@@ -1,6 +1,4 @@
-.PHONY: makelib testlib install clean
-
-.SUBDIRS: tests
+.PHONY: makelib testlib install testlib clean
 
 FILES = mlresolv
 LIB = mlresolv
@@ -18,8 +16,6 @@ section
    $(OCAMLLIBS): $(CCLIB)
    .DEFAULT: $(LIB)$(EXT_LIB)
 
-open ../../config
-
 IFILES[] =
    mlresolv
 
@@ -28,6 +24,8 @@ ALIBS = $(CLIBNAME)$(EXT_LIB)
 LibInstall(makelib, $(LIB), $(IFILES), $(ALIBS))
 
 install: makelib
+
+.SUBDIRS: tests
 
 clean:
    $(CLEAN)
