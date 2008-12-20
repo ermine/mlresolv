@@ -1,0 +1,6 @@
+<*.c>: include_resolv_clib
+"libmlresolv.a": use_resolv_clib
+<mlresolv.cm{x,}a>: use_resolv_clib, use_libmlresolv
+<tests/test.{byte,native}>: use_mlresolv
+<tests/resolver.{byte,native}>: use_mlresolv
+
